@@ -1,0 +1,20 @@
+[project]
+name = "ansible-mcp-tools"
+version = "0.1.0"
+description = "mcp server for ansible services"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "cachetools>=6.0.0",
+    "cryptography>=45.0.2",
+    "httpx>=0.28.1",
+    "mcp[cli]>=1.9.0",
+    "pyjwt>=2.10.1",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["lightspeed_mcp"]
