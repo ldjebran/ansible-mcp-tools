@@ -2,7 +2,7 @@ from os import environ
 
 from ansible_mcp_tools.registry import register_service_url, register_sample_tools
 from ansible_mcp_tools.registry import init as init_registry
-from ansible_mcp_tools.server import LightspeedAAPServer
+from ansible_mcp_tools.server import LightspeedBaseAAPServer
 
 from ansible_mcp_tools.authentication import LightspeedAuthenticationBackend
 from ansible_mcp_tools.authentication.validators.aap_token_validator import (
@@ -25,7 +25,7 @@ register_service_url("controller", "https://localhost:8043")
 register_service_url("lightspeed", "http://localhost:7080")
 
 
-mcp = LightspeedAAPServer(
+mcp = LightspeedBaseAAPServer(
     auth_backend=LightspeedAuthenticationBackend(
         authentication_validators=[
             AAPJWTValidator(AAP_URL, verify_cert=False),
