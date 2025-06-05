@@ -17,4 +17,4 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["lightspeed_mcp"]
+packages = ["ansible_mcp_tools"]
