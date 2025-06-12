@@ -44,7 +44,7 @@ class DefaultToolParser(BaseToolParser):
             return tools
 
         logger.debug(f"Spec paths available: {list(self._spec['paths'].keys())}")
-        # version = self._spec.get("version", None)
+
         paths = {path: item for path, item in self._spec["paths"].items()}
         logger.debug(f"Paths: {list(paths.keys())}")
         for path, path_item in paths.items():
