@@ -9,11 +9,12 @@ from ansible_mcp_tools.openapi.protocols.tool_name_strategy import ToolNameStrat
 
 from mcp.server.fastmcp.utilities.logging import get_logger
 
+from ansible_mcp_tools import utils
+
 logger = get_logger(__name__)
 
 
 class BaseToolParser(ToolParser, ABC):
-
     def __init__(
         self, spec: Dict, service_name: str, tool_name_strategy: ToolNameStrategy
     ):
@@ -23,7 +24,6 @@ class BaseToolParser(ToolParser, ABC):
 
 
 class DefaultToolParser(BaseToolParser):
-
     def __init__(
         self, spec: Dict, service_name: str, tool_name_strategy: ToolNameStrategy
     ):
@@ -44,6 +44,7 @@ class DefaultToolParser(BaseToolParser):
             return tools
 
         logger.debug(f"Spec paths available: {list(self._spec['paths'].keys())}")
+
         paths = {path: item for path, item in self._spec["paths"].items()}
         logger.debug(f"Paths: {list(paths.keys())}")
         for path, path_item in paths.items():
@@ -56,8 +57,11 @@ class DefaultToolParser(BaseToolParser):
                     continue
                 try:
                     raw_name = f"{self._service_name}_{method.upper()} {path}"
-                    function_name = self._tool_name_strategy.normalize_tool_name(
-                        raw_name
+                    operation_id = operation.get("operationId", "")
+                    function_name = utils.get_tool_name_from_operation_id(
+                        operation_id,
+                        raw_name,
+                        self._tool_name_strategy.normalize_tool_name,
                     )
 
                     tool_exists = False
@@ -70,10 +74,19 @@ class DefaultToolParser(BaseToolParser):
                     if tool_exists:
                         continue
 
-                    description = operation.get(
-                        "summary",
-                        operation.get("description", "No description available"),
-                    )
+                    description = operation.get("summary", "")
+                    if not description:
+                        description = operation.get("description", "")
+                        if description and "\n" in description:
+                            # take a max of tree lines
+                            description_lines = description.split("\n")
+                            description = "\n".join(
+                                description_lines[0 : min(3, len(description_lines))]
+                            )
+                            description = description.replace("\n", " ")
+                        if not description:
+                            description = operation_id or function_name
+
                     input_schema = {
                         "type": "object",
                         "properties": {},

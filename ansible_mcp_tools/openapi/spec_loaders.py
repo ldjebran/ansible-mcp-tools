@@ -13,7 +13,6 @@ logger = get_logger(__name__)
 
 
 class BaseLoader(SpecLoader, ABC):
-
     def __init__(self, url: str):
         self._url = url
 
@@ -36,10 +35,9 @@ class BaseLoader(SpecLoader, ABC):
 
 
 class FileLoader(BaseLoader):
-
     def __init__(self, url: str):
         if not url.lower().startswith("file://"):
-            raise RuntimeError(f"URL should begin with 'file://'.")
+            raise RuntimeError("URL should begin with 'file://'.")
         super().__init__(url)
 
     @override
@@ -53,7 +51,6 @@ class FileLoader(BaseLoader):
 
 
 class UrlLoader(BaseLoader):
-
     retries: int = 3
 
     @override

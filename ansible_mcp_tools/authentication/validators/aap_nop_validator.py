@@ -19,11 +19,9 @@ logger = get_logger(__name__)
 
 
 class AAPNopValidator(AuthenticationValidator):
-
     async def validate(
         self, connection: HTTPConnection
     ) -> tuple[AuthCredentials, BaseUser] | None:
-
         auth_user = AuthenticationUser(
             "nop",
             AuthenticationInfo(

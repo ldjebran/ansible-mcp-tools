@@ -34,7 +34,7 @@ async def fetch_aap_controller_jobs_list(
     auth_headers = get_authentication_headers()
     verify_cert = auth_user.authentication_info.verify_cert if auth_user else True
     server_url_path = utils.get_aap_service_url_path(
-        "controller", auth_user.authentication_info.header_name, "/api/v2/unified_jobs/"
+        "controller", auth_user.authentication_info.header_name, "/api/v2/jobs/"
     )
     async with httpx.AsyncClient(verify=verify_cert) as client:
         response = await client.get(

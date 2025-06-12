@@ -6,5 +6,4 @@ from typing import Protocol, runtime_checkable
 
 @runtime_checkable
 class ToolParser(Protocol):
-
     def parse_tools(self) -> List[types.Tool]: ...

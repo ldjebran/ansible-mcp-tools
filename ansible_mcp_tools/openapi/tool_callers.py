@@ -21,7 +21,6 @@ logger = get_logger(__name__)
 
 
 class BaseToolCaller(ToolCaller, ABC):
-
     def __init__(
         self,
         spec: Dict,
@@ -36,7 +35,6 @@ class BaseToolCaller(ToolCaller, ABC):
 
 
 class DefaultToolCaller(BaseToolCaller):
-
     def __init__(
         self,
         spec: Dict,
@@ -197,8 +195,9 @@ class DefaultToolCaller(BaseToolCaller):
                 if method.lower() not in ["get", "post", "put", "delete", "patch"]:
                     continue
                 raw_name = f"{self._service_name}_{method.upper()} {path}"
-                current_function_name = self._tool_name_strategy.normalize_tool_name(
-                    raw_name
+                operation_id = operation.get("operationId", "")
+                current_function_name = utils.get_tool_name_from_operation_id(
+                    operation_id, raw_name, self._tool_name_strategy.normalize_tool_name
                 )
                 if current_function_name == function_name:
                     return {

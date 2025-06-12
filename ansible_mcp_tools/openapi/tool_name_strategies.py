@@ -10,7 +10,6 @@ logger = get_logger(__name__)
 
 
 class DefaultToolNameStrategy(ToolNameStrategy):
-
     def normalize_tool_name(self, raw_name: str) -> str:
         """Convert an HTTP method and path into a normalized tool name."""
         try:
