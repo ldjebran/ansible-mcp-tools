@@ -2,6 +2,11 @@ from os import environ
 
 from mcp.server.fastmcp.utilities.logging import get_logger
 
+from ansible_mcp_tools.openapi.tool_rules import (
+    MethodRule,
+    OperationIdBlackRule,
+    NoDescriptionRule,
+)
 from ansible_mcp_tools.registry import register_service_url
 from ansible_mcp_tools.registry import init as init_registry
 from ansible_mcp_tools.server import LightspeedOpenAPIAAPServer
@@ -48,6 +53,20 @@ mcp = LightspeedOpenAPIAAPServer(
         ]
     ),
     spec_loader=FileLoader(URL),
+    tool_rules=[
+        MethodRule(["PUT", "OPTIONS", "DELETE", "PATCH"]),
+        OperationIdBlackRule(
+            [
+                "ai_chat_create",
+                "ai_feedback_create",
+                "telemetry_settings_set",
+                "wca_api_key_set",
+                "wca_model_id_set",
+                "ai_completions_create",
+            ]
+        ),
+        NoDescriptionRule(),
+    ],
     host=HOST,
     port=PORT,
 )

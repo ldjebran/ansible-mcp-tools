@@ -7,6 +7,8 @@ from ansible_mcp_tools.registry import init as init_registry
 from ansible_mcp_tools.server import LightspeedOpenAPIAAPServer
 from ansible_mcp_tools.openapi.spec_loaders import FileLoader
 
+from ansible_mcp_tools.openapi.tool_rules import MethodRule, NoDescriptionRule
+
 from ansible_mcp_tools.authentication import LightspeedAuthenticationBackend
 from ansible_mcp_tools.authentication.validators.aap_token_validator import (
     AAPTokenValidator,
@@ -41,6 +43,10 @@ mcp = LightspeedOpenAPIAAPServer(
         ]
     ),
     spec_loader=FileLoader(URL),
+    tool_rules=[
+        MethodRule(["PUT", "OPTIONS", "DELETE", "PATCH", "POST"]),
+        NoDescriptionRule(),
+    ],
     host=HOST,
     port=PORT,
 )
