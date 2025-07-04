@@ -10,14 +10,23 @@ from ansible_mcp_tools.openapi.protocols.tool_name_strategy import ToolNameStrat
 from mcp.server.fastmcp.utilities.logging import get_logger
 
 from ansible_mcp_tools import utils
+from ansible_mcp_tools.openapi.protocols.tool_rule import ToolRule
+from ansible_mcp_tools.openapi.tool_rules import check_tool_rules
 
 logger = get_logger(__name__)
 
 
 class BaseToolParser(ToolParser, ABC):
     def __init__(
-        self, spec: Dict, service_name: str, tool_name_strategy: ToolNameStrategy
+        self,
+        spec: Dict,
+        service_name: str,
+        tool_name_strategy: ToolNameStrategy,
+        tool_rules: List[ToolRule] | None = None,
     ):
+        if tool_rules is None:
+            tool_rules = []
+        self._tool_rules = tool_rules
         self._spec = spec
         self._service_name = service_name
         self._tool_name_strategy = tool_name_strategy
@@ -25,9 +34,13 @@ class BaseToolParser(ToolParser, ABC):
 
 class DefaultToolParser(BaseToolParser):
     def __init__(
-        self, spec: Dict, service_name: str, tool_name_strategy: ToolNameStrategy
+        self,
+        spec: Dict,
+        service_name: str,
+        tool_name_strategy: ToolNameStrategy,
+        tool_rules: list[ToolRule] | None = None,
     ):
-        super().__init__(spec, service_name, tool_name_strategy)
+        super().__init__(spec, service_name, tool_name_strategy, tool_rules=tool_rules)
 
     @override
     def parse_tools(self) -> List[types.Tool]:
@@ -35,7 +48,7 @@ class DefaultToolParser(BaseToolParser):
         tools: List[types.Tool] = []
         logger.debug("Clearing previously registered tools to allow re-registration")
         tools.clear()
-
+        tools_ignored = 0
         if not self._spec:
             logger.error("OpenAPI spec is None or empty.")
             return tools
@@ -52,8 +65,17 @@ class DefaultToolParser(BaseToolParser):
                 logger.debug(f"Empty path item for {path}")
                 continue
             for method, operation in path_item.items():
+                if not isinstance(operation, dict) or not check_tool_rules(
+                    self._tool_rules, path, method, operation
+                ):
+                    logger.debug(
+                        f"Skipping unsupported path operation item, path: {path}, method: {method}, operation: {operation}"
+                    )
+                    tools_ignored += 1
+                    continue
                 if method.lower() not in ["get", "post", "put", "delete", "patch"]:
                     logger.debug(f"Skipping unsupported method {method} for {path}")
+                    tools_ignored += 1
                     continue
                 try:
                     raw_name = f"{self._service_name}_{method.upper()} {path}"
@@ -155,4 +177,5 @@ class DefaultToolParser(BaseToolParser):
                         exc_info=True,
                     )
         logger.debug(f"Registered {len(tools)} functions from OpenAPI spec.")
+        logger.debug(f"Ignored {tools_ignored} functions from OpenAPI spec.")
         return tools
