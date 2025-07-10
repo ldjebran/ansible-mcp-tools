@@ -37,7 +37,7 @@ class LightspeedBaseAAPServer(FastMCP):
 
     def init_app_authentication_backend(self, app: Starlette):
         if isinstance(self._auth_backend, AuthenticationBackend):
-            logger.debug(">>>>>>>> register lightspeed AAP authentication backend")
+            logger.debug(f">>>>>>>> {self.name} authentication backend")
             app.add_middleware(
                 LightspeedAuthenticationMiddleware, backend=self._auth_backend
             )

@@ -76,7 +76,9 @@ class DefaultToolCaller(BaseToolCaller):
             # This leads to remote API invocations failing due to the additional parameter
             # Therefore remove 'session_id' from the arguments dictionary
             parameters = arguments.copy()
-            del parameters["session_id"]
+
+            if "session_id" in parameters:
+                del parameters["session_id"]
 
             try:
                 path = path.format(**parameters)
