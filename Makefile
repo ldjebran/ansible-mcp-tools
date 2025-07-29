@@ -53,6 +53,11 @@ build-lightspeed:
 	${CONTAINER_RUNTIME} build --build-arg PORT=${MCP_LIGHTSPEED_PORT} -f ./aap_lightspeed_api_1_0/Containerfile -t ansible-mcp-lightspeed .
 	@echo "Image $(RED)ansible-mcp-lightspeed$(NC) built successfully."
 
+build-aap-inventory:
+	@echo "Building AAP AI Installer Inventory MCP Server image..."
+	${CONTAINER_RUNTIME} build -f ./aap_inventory/Containerfile -t aap-inventory-mcp-server .
+	@echo "Image $(RED)aap_inventory$(NC) built successfully."
+
 # Pre-check for required environment variables
 check-env-gateway-url:
 	@if [ -z "$(AAP_GATEWAY_URL)" ]; then \
@@ -105,6 +110,11 @@ run-lightspeed: check-env-gateway-url check-env-lightspeed-service-url
 		--env HOST=0.0.0.0 \
 		--env PORT=${MCP_LIGHTSPEED_PORT} \
 		ansible-mcp-lightspeed
+
+run-aap-inventory:
+	@echo "Running AAP AI Installer Inventory MCP Server container..."
+	${CONTAINER_RUNTIME} run aap-inventory-mcp-server
+
 
 clean:
 	@echo "Cleaning up..."

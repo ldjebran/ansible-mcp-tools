@@ -1,0 +1,9 @@
+[project]
+name = "aap-ai-installer-inventory-mcp-server"
+version = "0.1.0"
+description = "AAP AI Installer Inventory MCP Server"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "mcp>=1.9.2",
+]

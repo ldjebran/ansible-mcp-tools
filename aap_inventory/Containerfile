@@ -1,0 +1,18 @@
+FROM registry.access.redhat.com/ubi9/python-312-minimal:latest AS production
+ENV PORT=20000
+USER root
+
+WORKDIR /var/www/
+
+COPY aap_inventory/server.py ./
+COPY aap_inventory/pyproject.toml ./
+COPY aap_inventory/aap_inventory_tool ./aap_inventory_tool
+
+RUN python -m pip install --no-cache-dir --no-binary=all .
+
+USER 1000
+
+# Launch!
+ENTRYPOINT ["python3.12", "server.py"]
+
+EXPOSE ${PORT}
