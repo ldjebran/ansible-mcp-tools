@@ -818,8 +818,7 @@ class TestCLICommands(unittest.TestCase):
         return file_path
 
     @patch('sys.stdout', new_callable=StringIO)
-    @patch('sys.exit')
-    def test_validate_command_success(self, mock_exit, mock_stdout):
+    def test_validate_command_success(self, mock_stdout):
         """Test successful validate command."""
         content = """
 [automationgateway]
@@ -864,15 +863,14 @@ redis_mode=standalone
         args.platform = 'containerized'
         args.topology = 'growth'
 
-        validate_command(args)
+        rc = validate_command(args)
 
-        mock_exit.assert_called_with(0)
+        self.assertEqual(0, rc)
         output = mock_stdout.getvalue()
         self.assertIn('Inventory validation passed!', output)
 
     @patch('sys.stdout', new_callable=StringIO)
-    @patch('sys.exit')
-    def test_validate_command_failure(self, mock_exit, mock_stdout):
+    def test_validate_command_failure(self, mock_stdout):
         """Test failed validate command."""
         content = """
 [automationgateway]
@@ -889,31 +887,29 @@ registry_username=testuser
         args.platform = 'containerized'
         args.topology = 'growth'
 
-        validate_command(args)
+        rc = validate_command(args)
 
-        mock_exit.assert_called_with(1)
+        self.assertEqual(1, rc)
         output = mock_stdout.getvalue()
         self.assertIn('Inventory validation failed!', output)
         self.assertIn('ERRORS:', output)
 
     @patch('sys.stdout', new_callable=StringIO)
-    @patch('sys.exit')
-    def test_validate_command_file_not_found(self, mock_exit, mock_stdout):
+    def test_validate_command_file_not_found(self, mock_stdout):
         """Test validate command with non-existent file."""
         args = MagicMock()
         args.inventory = '/nonexistent/file.ini'
         args.platform = 'containerized'
         args.topology = 'growth'
 
-        validate_command(args)
+        rc = validate_command(args)
 
-        mock_exit.assert_called_with(1)
+        self.assertEqual(1, rc)
         output = mock_stdout.getvalue()
         self.assertIn('Error: Inventory file not found', output)
 
     @patch('sys.stdout', new_callable=StringIO)
-    @patch('sys.exit')
-    def test_compare_command_success(self, mock_exit, mock_stdout):
+    def test_compare_command_success(self, mock_stdout):
         """Test successful compare command."""
         content = """
 [automationgateway]
@@ -935,15 +931,14 @@ registry_username=testuser
         args.inventory1 = file_path1
         args.inventory2 = file_path2
 
-        compare_command(args)
+        rc = compare_command(args)
 
-        mock_exit.assert_called_with(0)
+        self.assertEqual(0, rc)
         output = mock_stdout.getvalue()
         self.assertIn('Inventories are semantically equivalent!', output)
 
     @patch('sys.stdout', new_callable=StringIO)
-    @patch('sys.exit')
-    def test_compare_command_failure(self, mock_exit, mock_stdout):
+    def test_compare_command_failure(self, mock_stdout):
         """Test failed compare command."""
         content1 = """
 [automationgateway]
@@ -973,9 +968,9 @@ registry_username=testuser
         args.inventory1 = file_path1
         args.inventory2 = file_path2
 
-        compare_command(args)
+        rc = compare_command(args)
 
-        mock_exit.assert_called_with(1)
+        self.assertEqual(1, rc)
         output = mock_stdout.getvalue()
         self.assertIn('Inventories are not semantically equivalent!', output)
         self.assertIn('DIFFERENCES:', output)
@@ -1003,12 +998,11 @@ class TestMainFunction(unittest.TestCase):
             main()
 
     @patch('sys.argv', ['aap_inventory_tool.py'])
-    @patch('sys.exit')
-    def test_main_no_command(self, mock_exit):
+    def test_main_no_command(self):
         """Test main function with no command."""
-        main()
+        rc = main()
 
-        mock_exit.assert_called_with(1)
+        self.assertEqual(1, rc)
 
     @patch('sys.argv', ['aap_inventory_tool.py', 'generate', '--help'])
     def test_main_generate_help(self):
@@ -1017,12 +1011,11 @@ class TestMainFunction(unittest.TestCase):
             main()
 
     @patch('sys.argv', ['aap_inventory_tool.py', 'generate', '--platform', 'containerized', '--topology', 'growth'])
-    @patch('sys.exit')
-    def test_main_generate_missing_host(self, mock_exit):
+    def test_main_generate_missing_host(self):
         """Test main function generate command missing host."""
-        main()
+        rc = main()
 
-        mock_exit.assert_called_with(1)
+        self.assertEqual(1, rc)
 
 
 class TestPasswordVariableValidation(unittest.TestCase):
@@ -2035,8 +2028,7 @@ class TestGenerateCommand(unittest.TestCase):
         shutil.rmtree(self.temp_dir)
 
     @patch('sys.stdout', new_callable=StringIO)
-    @patch('sys.exit')
-    def test_generate_command_success(self, mock_exit, mock_stdout):
+    def test_generate_command_success(self, mock_stdout):
         """Test successful generate command."""
         args = MagicMock()
         args.platform = 'containerized'
@@ -2044,16 +2036,15 @@ class TestGenerateCommand(unittest.TestCase):
         args.host = 'test.example.com'
         args.output_path = os.path.join(self.temp_dir, 'test_inventory')
 
-        generate_command(args)
+        rc = generate_command(args)
 
-        mock_exit.assert_called_with(0)
+        self.assertEqual(0, rc)
         output = mock_stdout.getvalue()
         self.assertIn('Inventory file generated successfully', output)
         self.assertTrue(Path(args.output_path).exists())
 
     @patch('sys.stdout', new_callable=StringIO)
-    @patch('sys.exit')
-    def test_generate_command_missing_host(self, mock_exit, mock_stdout):
+    def test_generate_command_missing_host(self, mock_stdout):
         """Test generate command failure when host is missing for containerized growth."""
         args = MagicMock()
         args.platform = 'containerized'
@@ -2061,15 +2052,14 @@ class TestGenerateCommand(unittest.TestCase):
         args.host = None
         args.output_path = os.path.join(self.temp_dir, 'test_inventory')
 
-        generate_command(args)
+        rc = generate_command(args)
 
-        mock_exit.assert_called_with(1)
+        self.assertEqual(1, rc)
         output = mock_stdout.getvalue()
         self.assertIn('Error: --host is required for containerized growth topology', output)
 
     @patch('sys.stdout', new_callable=StringIO)
-    @patch('sys.exit')
-    def test_generate_command_unsupported_platform_topology(self, mock_exit, mock_stdout):
+    def test_generate_command_unsupported_platform_topology(self, mock_stdout):
         """Test generate command with unsupported platform/topology."""
         args = MagicMock()
         args.platform = 'rpm'
@@ -2084,15 +2074,14 @@ class TestGenerateCommand(unittest.TestCase):
         args.host = 'test.example.com'
         args.output_path = os.path.join(self.temp_dir, 'test_inventory')
 
-        generate_command(args)
+        rc = generate_command(args)
 
-        mock_exit.assert_called_with(1)
+        self.assertEqual(1, rc)
         output = mock_stdout.getvalue()
         self.assertIn('Error:', output)
 
     @patch('sys.stdout', new_callable=StringIO)
-    @patch('sys.exit')
-    def test_generate_command_default_output_path(self, mock_exit, mock_stdout):
+    def test_generate_command_default_output_path(self, mock_stdout):
         """Test generate command with default output path."""
         args = MagicMock()
         args.platform = 'containerized'
@@ -2105,9 +2094,9 @@ class TestGenerateCommand(unittest.TestCase):
         original_cwd = os.getcwd()
         try:
             os.chdir(self.temp_dir)
-            generate_command(args)
+            rc = generate_command(args)
 
-            mock_exit.assert_called_with(0)
+            self.assertEqual(0, rc)
             output = mock_stdout.getvalue()
             self.assertIn('Inventory file generated successfully: inventory', output)
             self.assertTrue(Path('inventory').exists())

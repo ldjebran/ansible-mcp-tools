@@ -518,7 +518,7 @@ class InventoryGenerator(InventoryProcessor):
         hub_signing_vars = []
         for param, (var_name, default_value) in var_mapping.items():
             if param in kwargs:
-                if kwargs[param] is not None and kwargs[param] != '':
+                if kwargs[param]:
                     # Value was provided
                     if param in ['hub_signing_auto_sign', 'hub_signing_require_content_approval']:
                         # Boolean parameters
@@ -575,7 +575,7 @@ class InventoryGenerator(InventoryProcessor):
         ca_cert_vars = []
         for param, (var_name, default_value) in var_mapping.items():
             if param in kwargs:
-                if kwargs[param] is not None and kwargs[param] != '':
+                if kwargs[param]:
                     # Value was provided
                     value = kwargs[param]
                     if isinstance(value, str):
@@ -684,7 +684,7 @@ eda_pg_password={{{{ eda_pg_password }}}}
             self.errors.append("--external-database is required for containerized enterprise topology")
 
         # Validate Redis hosts if provided
-        if redis_hosts is not None and len(redis_hosts) != 6:
+        if redis_hosts and isinstance(redis_hosts, list) and len(redis_hosts) != 6:
             self.errors.append("--redis requires exactly 6 hosts for Redis cluster")
 
         if self.errors:
@@ -878,7 +878,7 @@ automationedacontroller_pg_password={{{{ automationedacontroller_pg_password }}}
             self.errors.append("--external-database is required for RPM enterprise topology")
 
         # Validate Redis hosts if provided
-        if redis_hosts is not None and len(redis_hosts) != 6:
+        if redis_hosts and isinstance(redis_hosts, list) and len(redis_hosts) != 6:
             self.errors.append("--redis requires exactly 6 hosts for Redis cluster")
 
         if self.errors:
@@ -999,7 +999,7 @@ def validate_command(args):
     """Handle the validate subcommand."""
     if not Path(args.inventory).exists():
         print(f"Error: Inventory file not found: {args.inventory}")
-        sys.exit(1)
+        return 1
 
     # Create validator and run validation
     validator = InventoryValidator(args.platform, args.topology)
@@ -1028,21 +1028,21 @@ def validate_command(args):
         print("Inventory validation passed!")
         if results['warnings']:
             print("   (with warnings)")
-        sys.exit(0)
+        return 0
     else:
         print("Inventory validation failed!")
-        sys.exit(1)
+        return 1
 
 
 def compare_command(args):
     """Handle the compare subcommand."""
     if not Path(args.inventory1).exists():
         print(f"Error: First inventory file not found: {args.inventory1}")
-        sys.exit(1)
+        return 1
 
     if not Path(args.inventory2).exists():
         print(f"Error: Second inventory file not found: {args.inventory2}")
-        sys.exit(1)
+        return 1
 
     # Create comparator and run comparison
     comparator = InventoryComparator()
@@ -1069,10 +1069,10 @@ def compare_command(args):
 
     if are_equivalent:
         print("Inventories are semantically equivalent!")
-        sys.exit(0)
+        return 0
     else:
         print("Inventories are not semantically equivalent!")
-        sys.exit(1)
+        return 1
 
 
 def generate_command(args):
@@ -1083,7 +1083,7 @@ def generate_command(args):
 
     if not required_params:
         print(f"Error: Unknown platform/topology combination: {args.platform} {args.topology}")
-        sys.exit(1)
+        return 1
 
     # Check each required parameter
     for param in required_params:
@@ -1091,7 +1091,7 @@ def generate_command(args):
         if not value:
             param_display = param.replace('_', '-')
             print(f"Error: --{param_display} is required for {args.platform} {args.topology} topology")
-            sys.exit(1)
+            return 1
 
     # Additional validation for enterprise topologies (minimum hosts requirements)
     if args.topology == 'enterprise':
@@ -1099,13 +1099,13 @@ def generate_command(args):
         execution_hosts = getattr(args, 'execution_hosts', [])
         if execution_hosts and len(execution_hosts) < 2:
             print("Error: --execution-hosts requires minimum 2 execution hosts for enterprise topology")
-            sys.exit(1)
+            return 1
 
         # Validate Redis parameter if provided
         redis_hosts = getattr(args, 'redis', None)
-        if redis_hosts is not None and len(redis_hosts) != 6:
+        if redis_hosts and isinstance(redis_hosts, list) and len(redis_hosts) != 6:
             print("Error: --redis requires exactly 6 hosts for Redis cluster")
-            sys.exit(1)
+            return 1
 
     # Create generator and generate inventory
     generator = InventoryGenerator(args.platform, args.topology)
@@ -1116,26 +1116,26 @@ def generate_command(args):
 
     # Add custom CA cert parameters if provided
     ca_cert_params = {}
-    if hasattr(args, 'custom_ca_cert') and args.custom_ca_cert is not None:
+    if hasattr(args, 'custom_ca_cert') and args.custom_ca_cert:
         ca_cert_params['custom_ca_cert'] = args.custom_ca_cert
-    if hasattr(args, 'ca_tls_cert') and args.ca_tls_cert is not None:
+    if hasattr(args, 'ca_tls_cert') and args.ca_tls_cert:
         ca_cert_params['ca_tls_cert'] = args.ca_tls_cert
-    if hasattr(args, 'ca_tls_key') and args.ca_tls_key is not None:
+    if hasattr(args, 'ca_tls_key') and args.ca_tls_key:
         ca_cert_params['ca_tls_key'] = args.ca_tls_key
 
     # Add hub signing parameters if provided
     hub_signing_params = {}
-    if hasattr(args, 'hub_signing_auto_sign') and args.hub_signing_auto_sign is not None:
+    if hasattr(args, 'hub_signing_auto_sign') and args.hub_signing_auto_sign:
         hub_signing_params['hub_signing_auto_sign'] = args.hub_signing_auto_sign
-    if hasattr(args, 'hub_signing_require_content_approval') and args.hub_signing_require_content_approval is not None:
+    if hasattr(args, 'hub_signing_require_content_approval') and args.hub_signing_require_content_approval:
         hub_signing_params['hub_signing_require_content_approval'] = args.hub_signing_require_content_approval
-    if hasattr(args, 'hub_signing_collection_key') and args.hub_signing_collection_key is not None:
+    if hasattr(args, 'hub_signing_collection_key') and args.hub_signing_collection_key:
         hub_signing_params['hub_signing_collection_key'] = args.hub_signing_collection_key
-    if hasattr(args, 'hub_signing_collection_pass') and args.hub_signing_collection_pass is not None:
+    if hasattr(args, 'hub_signing_collection_pass') and args.hub_signing_collection_pass:
         hub_signing_params['hub_signing_collection_pass'] = args.hub_signing_collection_pass
-    if hasattr(args, 'hub_signing_container_key') and args.hub_signing_container_key is not None:
+    if hasattr(args, 'hub_signing_container_key') and args.hub_signing_container_key:
         hub_signing_params['hub_signing_container_key'] = args.hub_signing_container_key
-    if hasattr(args, 'hub_signing_container_pass') and args.hub_signing_container_pass is not None:
+    if hasattr(args, 'hub_signing_container_pass') and args.hub_signing_container_pass:
         hub_signing_params['hub_signing_container_pass'] = args.hub_signing_container_pass
 
     if args.platform == 'containerized' and args.topology == 'enterprise':
@@ -1200,10 +1200,10 @@ def generate_command(args):
     if success:
         if output_type != 'stdout':
             print(f"Inventory file generated successfully: {output_path}")
-        sys.exit(0)
+        return 0
     else:
         print("Inventory generation failed!")
-        sys.exit(1)
+        return 1
 
 
 def main():
@@ -1420,15 +1420,17 @@ Note: --host is required for containerized growth topology only.
     args = parser.parse_args()
 
     if args.command == 'validate':
-        validate_command(args)
+        rc = validate_command(args)
     elif args.command == 'compare':
-        compare_command(args)
+        rc = compare_command(args)
     elif args.command == 'generate':
-        generate_command(args)
+        rc = generate_command(args)
     else:
         parser.print_help()
-        sys.exit(1)
+        rc = 1
+
+    return rc
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
