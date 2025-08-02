@@ -518,7 +518,7 @@ class InventoryGenerator(InventoryProcessor):
         hub_signing_vars = []
         for param, (var_name, default_value) in var_mapping.items():
             if param in kwargs:
-                if kwargs[param]:
+                if kwargs[param] is not None and kwargs[param] != '':
                     # Value was provided
                     if param in ['hub_signing_auto_sign', 'hub_signing_require_content_approval']:
                         # Boolean parameters
@@ -541,8 +541,7 @@ class InventoryGenerator(InventoryProcessor):
                         hub_signing_vars.append(f"{var_name}={default_value}")
                     else:
                         # String parameters - create template variable
-                        template_var = var_name.replace('automationhub_', '').replace('hub_', '')
-                        hub_signing_vars.append(f"{var_name}={{{{ {template_var} }}}}")
+                        hub_signing_vars.append(f"{var_name}={{{{ {var_name} }}}}")
 
         if hub_signing_vars:
             hub_signing_section = "\n" + "\n".join(hub_signing_vars) + "\n"
@@ -576,7 +575,7 @@ class InventoryGenerator(InventoryProcessor):
         ca_cert_vars = []
         for param, (var_name, default_value) in var_mapping.items():
             if param in kwargs:
-                if kwargs[param]:
+                if kwargs[param] is not None and kwargs[param] != '':
                     # Value was provided
                     value = kwargs[param]
                     if isinstance(value, str):
@@ -589,8 +588,7 @@ class InventoryGenerator(InventoryProcessor):
                         ca_cert_vars.append(f"{var_name}={value}")
                 elif kwargs[param] == '':
                     # Parameter was passed but no value provided - create template variable
-                    template_var = var_name.replace('aap_', '')
-                    ca_cert_vars.append(f"{var_name}={{{{ {template_var} }}}}")
+                    ca_cert_vars.append(f"{var_name}={{{{ {var_name} }}}}")
 
         if ca_cert_vars:
             ca_cert_section = "\n" + "\n".join(ca_cert_vars) + "\n"
@@ -686,7 +684,7 @@ eda_pg_password={{{{ eda_pg_password }}}}
             self.errors.append("--external-database is required for containerized enterprise topology")
 
         # Validate Redis hosts if provided
-        if redis_hosts and len(redis_hosts) != 6:
+        if redis_hosts is not None and len(redis_hosts) != 6:
             self.errors.append("--redis requires exactly 6 hosts for Redis cluster")
 
         if self.errors:
@@ -880,7 +878,7 @@ automationedacontroller_pg_password={{{{ automationedacontroller_pg_password }}}
             self.errors.append("--external-database is required for RPM enterprise topology")
 
         # Validate Redis hosts if provided
-        if redis_hosts and len(redis_hosts) != 6:
+        if redis_hosts is not None and len(redis_hosts) != 6:
             self.errors.append("--redis requires exactly 6 hosts for Redis cluster")
 
         if self.errors:
@@ -1085,8 +1083,7 @@ def generate_command(args):
 
     if not required_params:
         print(f"Error: Unknown platform/topology combination: {args.platform} {args.topology}")
-        # sys.exit(1) # @tamid
-        return
+        sys.exit(1)
 
     # Check each required parameter
     for param in required_params:
@@ -1094,8 +1091,7 @@ def generate_command(args):
         if not value:
             param_display = param.replace('_', '-')
             print(f"Error: --{param_display} is required for {args.platform} {args.topology} topology")
-            # sys.exit(1) # @tamid
-            return
+            sys.exit(1)
 
     # Additional validation for enterprise topologies (minimum hosts requirements)
     if args.topology == 'enterprise':
@@ -1103,15 +1099,13 @@ def generate_command(args):
         execution_hosts = getattr(args, 'execution_hosts', [])
         if execution_hosts and len(execution_hosts) < 2:
             print("Error: --execution-hosts requires minimum 2 execution hosts for enterprise topology")
-            # sys.exit(1) # @tamid
-            return
+            sys.exit(1)
 
         # Validate Redis parameter if provided
         redis_hosts = getattr(args, 'redis', None)
-        if redis_hosts and len(redis_hosts) != 6:
+        if redis_hosts is not None and len(redis_hosts) != 6:
             print("Error: --redis requires exactly 6 hosts for Redis cluster")
-            # sys.exit(1) # @tamid
-            return
+            sys.exit(1)
 
     # Create generator and generate inventory
     generator = InventoryGenerator(args.platform, args.topology)
@@ -1122,26 +1116,26 @@ def generate_command(args):
 
     # Add custom CA cert parameters if provided
     ca_cert_params = {}
-    if hasattr(args, 'custom_ca_cert') and args.custom_ca_cert:
+    if hasattr(args, 'custom_ca_cert') and args.custom_ca_cert is not None:
         ca_cert_params['custom_ca_cert'] = args.custom_ca_cert
-    if hasattr(args, 'ca_tls_cert') and args.ca_tls_cert:
+    if hasattr(args, 'ca_tls_cert') and args.ca_tls_cert is not None:
         ca_cert_params['ca_tls_cert'] = args.ca_tls_cert
-    if hasattr(args, 'ca_tls_key') and args.ca_tls_key:
+    if hasattr(args, 'ca_tls_key') and args.ca_tls_key is not None:
         ca_cert_params['ca_tls_key'] = args.ca_tls_key
 
     # Add hub signing parameters if provided
     hub_signing_params = {}
-    if hasattr(args, 'hub_signing_auto_sign') and args.hub_signing_auto_sign:
+    if hasattr(args, 'hub_signing_auto_sign') and args.hub_signing_auto_sign is not None:
         hub_signing_params['hub_signing_auto_sign'] = args.hub_signing_auto_sign
-    if hasattr(args, 'hub_signing_require_content_approval') and args.hub_signing_require_content_approval:
+    if hasattr(args, 'hub_signing_require_content_approval') and args.hub_signing_require_content_approval is not None:
         hub_signing_params['hub_signing_require_content_approval'] = args.hub_signing_require_content_approval
-    if hasattr(args, 'hub_signing_collection_key') and args.hub_signing_collection_key:
+    if hasattr(args, 'hub_signing_collection_key') and args.hub_signing_collection_key is not None:
         hub_signing_params['hub_signing_collection_key'] = args.hub_signing_collection_key
-    if hasattr(args, 'hub_signing_collection_pass') and args.hub_signing_collection_pass:
+    if hasattr(args, 'hub_signing_collection_pass') and args.hub_signing_collection_pass is not None:
         hub_signing_params['hub_signing_collection_pass'] = args.hub_signing_collection_pass
-    if hasattr(args, 'hub_signing_container_key') and args.hub_signing_container_key:
+    if hasattr(args, 'hub_signing_container_key') and args.hub_signing_container_key is not None:
         hub_signing_params['hub_signing_container_key'] = args.hub_signing_container_key
-    if hasattr(args, 'hub_signing_container_pass') and args.hub_signing_container_pass:
+    if hasattr(args, 'hub_signing_container_pass') and args.hub_signing_container_pass is not None:
         hub_signing_params['hub_signing_container_pass'] = args.hub_signing_container_pass
 
     if args.platform == 'containerized' and args.topology == 'enterprise':
@@ -1203,14 +1197,13 @@ def generate_command(args):
             print(f"  {warning}")
         print()
 
-    # @Tami Temporarily Commented out
-    # if success:
-    #     if output_type != 'stdout':
-    #         print(f"Inventory file generated successfully: {output_path}")
-    #     sys.exit(0)
-    # else:
-    #     print("Inventory generation failed!")
-    #     sys.exit(1)
+    if success:
+        if output_type != 'stdout':
+            print(f"Inventory file generated successfully: {output_path}")
+        sys.exit(0)
+    else:
+        print("Inventory generation failed!")
+        sys.exit(1)
 
 
 def main():
@@ -1303,35 +1296,35 @@ Note: --host is required for containerized growth topology only.
     generate_parser.add_argument(
         '--gateway-hosts',
         nargs='+',
-        help='Gateway hosts (required for RPM enterprise topology and containerized enterprise topology)'
+        help='Gateway hosts (required for containerized enterprise topology)'
     )
     generate_parser.add_argument(
         '--controller-hosts',
         nargs='+',
-        help='Controller hosts (required for RPM enterprise topology and containerized enterprise topology)'
+        help='Controller hosts (required for containerized enterprise topology)'
     )
     generate_parser.add_argument(
         '--hop-host',
-        help='Hop node host (required for RPM enterprise topology and containerized enterprise topology)'
+        help='Hop node host (required for containerized enterprise topology)'
     )
     generate_parser.add_argument(
         '--execution-hosts',
         nargs='*',
-        help='Execution node hosts (required for RPM enterprise topology and containerized enterprise topology, minimum 2 hosts)'
+        help='Execution node hosts (required for containerized enterprise topology, minimum 2 hosts)'
     )
     generate_parser.add_argument(
         '--hub-hosts',
         nargs='+',
-        help='Automation Hub hosts (required for RPM enterprise topology and containerized enterprise topology)'
+        help='Automation Hub hosts (required for containerized enterprise topology)'
     )
     generate_parser.add_argument(
         '--eda-hosts',
         nargs='+',
-        help='EDA Controller hosts (required for RPM enterprise topology and containerized enterprise topology)'
+        help='EDA Controller hosts (required for containerized enterprise topology)'
     )
     generate_parser.add_argument(
         '--external-database',
-        help='External database host (required for RPM enterprise topology and containerized enterprise topology)'
+        help='External database host (required for containerized enterprise topology)'
     )
 
     # RPM-specific arguments
