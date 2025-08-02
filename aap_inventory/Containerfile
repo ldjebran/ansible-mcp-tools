@@ -1,4 +1,5 @@
 FROM registry.access.redhat.com/ubi9/python-312-minimal:latest AS production
+ENV HOST=0.0.0.0
 ENV PORT=20000
 USER root
 

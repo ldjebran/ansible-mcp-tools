@@ -1,5 +1,6 @@
 # server.py
 import inspect
+import os
 import tempfile
 from typing import Annotated, Literal
 from pydantic import Field
@@ -7,8 +8,14 @@ from mcp.server import FastMCP
 
 from aap_inventory_tool import generate_command
 
+PORT = int(os.getenv("PORT", "20000"))
+HOST = os.getenv("HOST", "127.0.0.1")
 
-mcp = FastMCP("AI Installer Template MCP Server", port=20000)
+mcp = FastMCP(
+    "AI Installer Template MCP Server",
+    host=HOST,
+    port=PORT,
+)
 
 
 @mcp.tool(
