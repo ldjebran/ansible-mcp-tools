@@ -1075,14 +1075,14 @@ def compare_command(args):
         return 1
 
 
-def generate_command(args):
+def generate_command(args, log=sys.stdout):
     """Handle the generate subcommand."""
 
     # Validate required parameters using centralized function
     required_params = get_required_params_list(args.platform, args.topology)
 
     if not required_params:
-        print(f"Error: Unknown platform/topology combination: {args.platform} {args.topology}")
+        print(f"Error: Unknown platform/topology combination: {args.platform} {args.topology}", file=log)
         return 1
 
     # Check each required parameter
@@ -1090,7 +1090,7 @@ def generate_command(args):
         value = getattr(args, param, None)
         if not value:
             param_display = param.replace('_', '-')
-            print(f"Error: --{param_display} is required for {args.platform} {args.topology} topology")
+            print(f"Error: --{param_display} is required for {args.platform} {args.topology} topology", file=log)
             return 1
 
     # Additional validation for enterprise topologies (minimum hosts requirements)
@@ -1098,13 +1098,13 @@ def generate_command(args):
         # Check execution hosts minimum count
         execution_hosts = getattr(args, 'execution_hosts', [])
         if execution_hosts and len(execution_hosts) < 2:
-            print("Error: --execution-hosts requires minimum 2 execution hosts for enterprise topology")
+            print("Error: --execution-hosts requires minimum 2 execution hosts for enterprise topology", file=log)
             return 1
 
         # Validate Redis parameter if provided
         redis_hosts = getattr(args, 'redis', None)
         if redis_hosts and isinstance(redis_hosts, list) and len(redis_hosts) != 6:
-            print("Error: --redis requires exactly 6 hosts for Redis cluster")
+            print("Error: --redis requires exactly 6 hosts for Redis cluster", file=log)
             return 1
 
     # Create generator and generate inventory
@@ -1186,23 +1186,23 @@ def generate_command(args):
 
     # Print results
     if results['errors']:
-        print("ERRORS:")
+        print("ERRORS:", file=log)
         for error in results['errors']:
-            print(f"  {error}")
-        print()
+            print(f"  {error}", file=log)
+        print(file=log)
 
     if results['warnings']:
-        print("WARNINGS:")
+        print("WARNINGS:", file=log)
         for warning in results['warnings']:
-            print(f"  {warning}")
-        print()
+            print(f"  {warning}", file=log)
+        print(file=log)
 
     if success:
         if output_type != 'stdout':
-            print(f"Inventory file generated successfully: {output_path}")
+            print(f"Inventory file generated successfully: {output_path}", file=log)
         return 0
     else:
-        print("Inventory generation failed!")
+        print("Inventory generation failed!", file=log)
         return 1
 
 

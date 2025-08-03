@@ -137,30 +137,44 @@ def get_inventory(
             Field(description='This is a dummy argument added only for llama-stack compatibility'),
         ] = '',
 ) -> str:
+    # Read arguments and convert them into the format used by Python's argparse.ArgumentParser
     frame = inspect.currentframe()
     args_dict = inspect.getargvalues(frame).locals
 
     class Args:
         pass
 
-
     args = Args()
     for k,v in args_dict.items():
+        # Ignore session_id, which is added only for Llama Stack compatibility.
         if k != "session_id":
+            # Convert string properties that contain a comma-delimited list into a list.
             if k == "redis" or k.endswith("_hosts") and v is not None:
                 v = [s.strip() for s in v.split(",") if s != ""]
             setattr(args, k, v)
 
-    print(f"args: {args}")
+    # Create temporary files for inventory and log
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, mode="w") as inventory_file:
+            args.output_path = inventory_file.name
+            with tempfile.NamedTemporaryFile(delete=False, mode="w") as log:
+                # Generate an AAP inventory
+                rc = generate_command(args, log)
 
-    with tempfile.NamedTemporaryFile(delete=False) as tmp:
-        args.output_path = tmp.name
-        generate_command(args)
-        with open(tmp.name) as f:
-            output = f.read()
-        return output
+                # If the inventory file was generated successfully, return it.
+                if rc == 0:
+                    with open(inventory_file.name) as f:
+                        output = f.read()
+                # Otherise, return the execution log.
+                else:
+                    with open(log.name) as f:
+                        output = f.read()
+                        print(output)
+                return output
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return f'An unexpected error occurred.'
 
-    return "An error occurred"
 
 
 
