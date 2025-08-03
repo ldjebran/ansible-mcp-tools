@@ -131,6 +131,8 @@ clean:
 	${CONTAINER_RUNTIME} rmi -f $$(${CONTAINER_RUNTIME} images -a -q --filter reference=ansible-mcp-controller) || true
 	@echo "Removing ansible-mcp-lightspeed images..."
 	${CONTAINER_RUNTIME} rmi -f $$(${CONTAINER_RUNTIME} images -a -q --filter reference=ansible-mcp-lightspeed) || true
+	@echo "Removing aap-inventory-mcp-server images..."
+	${CONTAINER_RUNTIME} rmi -f $$(${CONTAINER_RUNTIME} images -a -q --filter reference=aap-inventory-mcp-server) || true
 	@echo "Clean-up complete."
 
 # Pre-check required environment variables for tag-and-push

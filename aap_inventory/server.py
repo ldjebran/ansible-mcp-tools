@@ -36,7 +36,7 @@ def get_inventory(
             str,
             Field(description='Host (hostname or IP) for all-in-one deployment (required for containerized growth topology)'),
         ] = '',
-        # required for containerized enterprise topology
+        # required both for containerized and RPM enterprise topologies
         gateway_hosts: Annotated[
             str,
             Field(description='Gateway hosts [comma-delimited host names or IP addresses] (required for containerized enterprise topology and RPM enterprise topology, minimum 2 hosts)'),
@@ -47,7 +47,7 @@ def get_inventory(
         ] = '',
         hop_host: Annotated[
             str,
-            Field(description='Hop node host (required for containerized enterprise topology and RPM enterprise topology)'),
+            Field(description='Hop host (required for containerized enterprise topology and RPM enterprise topology)'),
         ] = '',
         execution_hosts: Annotated[
             str,
