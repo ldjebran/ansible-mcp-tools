@@ -38,29 +38,29 @@ def get_inventory(
         ] = '',
         # required for containerized enterprise topology
         gateway_hosts: Annotated[
-            list[str],
-            Field(description='Gateway hosts (required for containerized enterprise topology and RPM enterprise topology, minimum 2 hosts)'),
-        ] = [],
+            str,
+            Field(description='Gateway hosts [comma-delimited host names or IP addresses] (required for containerized enterprise topology and RPM enterprise topology, minimum 2 hosts)'),
+        ] = '',
         controller_hosts: Annotated[
-            list[str],
-            Field(description='Controller hosts (required for containerized enterprise topology and RPM enterprise topology, minimum 2 hosts)'),
-        ] = [],
+            str,
+            Field(description='Controller hosts [comma-delimited host names or IP addresses] (required for containerized enterprise topology and RPM enterprise topology, minimum 2 hosts)'),
+        ] = '',
         hop_host: Annotated[
             str,
             Field(description='Hop node host (required for containerized enterprise topology and RPM enterprise topology)'),
         ] = '',
         execution_hosts: Annotated[
-            list[str],
-            Field(description='Execution node hosts (required for containerized enterprise topology and RPM enterprise topology, minimum 2 hosts)'),
-        ] = [], # minimum 2
+            str,
+            Field(description='Execution node hosts [comma-delimited host names or IP addresses] (required for containerized enterprise topology and RPM enterprise topology, minimum 2 hosts)'),
+        ] = '',
         hub_hosts:  Annotated[
-            list[str],
-            Field(description='Automation Hub hosts (required for containerized enterprise topology and RPM enterprise topology, minimum 2 hosts)'),
-        ] = [],
+            str,
+            Field(description='Automation Hub hosts [comma-delimited host names or IP addresses] (required for containerized enterprise topology and RPM enterprise topology, minimum 2 hosts)'),
+        ] = '',
         eda_hosts: Annotated[
-            list[str],
-            Field(description='EDA Controller hosts (required for containerized enterprise topology and RPM enterprise topology, minimum 2 hosts)'),
-        ] = [],
+            str,
+            Field(description='EDA Controller hosts [comma-delimited host names or IP addresses] (required for containerized enterprise topology and RPM enterprise topology, minimum 2 hosts)'),
+        ] = '',
         external_database: Annotated[
             str,
             Field(description='External database host (required for containerized enterprise topology and RPM enterprise topology)'),
@@ -91,9 +91,9 @@ def get_inventory(
             Field(description='Database host (required for RPM growth topology)'),
         ] = '',
         redis:  Annotated[
-            list[str],
-            Field(description='Redis cluster hosts (optional for enterprise topologies, requires exactly 6 hosts. If not provided, uses 2 gateway + 2 hub + 2 eda hosts)'),
-        ] = [],
+            str,
+            Field(description='Redis cluster hosts [comma-delimited host names or IP addresses] (optional for enterprise topologies, requires exactly 6 hosts. If not provided, uses 2 gateway + 2 hub + 2 eda hosts)'),
+        ] = '',
         # Custom CA certificate parameters
         custom_ca_cert: Annotated[
             str,
@@ -143,9 +143,12 @@ def get_inventory(
     class Args:
         pass
 
+
     args = Args()
     for k,v in args_dict.items():
         if k != "session_id":
+            if k == "redis" or k.endswith("_hosts") and v is not None:
+                v = [s.strip() for s in v.split(",") if s != ""]
             setattr(args, k, v)
 
     print(f"args: {args}")
