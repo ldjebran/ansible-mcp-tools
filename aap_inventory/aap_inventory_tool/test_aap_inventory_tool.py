@@ -1837,9 +1837,10 @@ class TestInventoryGenerator(unittest.TestCase):
         """Test basic containerized growth inventory generation."""
         generator = InventoryGenerator('containerized', 'growth')
         output_path = os.path.join(self.temp_dir, 'generated_inventory')
+        output_type = 'file'
         host = 'test.example.com'
 
-        success = generator.generate_inventory(output_path, host)
+        success = generator.generate_inventory(output_path, output_type, host)
         results = generator.get_results()
 
         self.assertTrue(success)
@@ -1905,8 +1906,9 @@ class TestInventoryGenerator(unittest.TestCase):
         """Test generation fails without platform and topology."""
         generator = InventoryGenerator()
         output_path = os.path.join(self.temp_dir, 'generated_inventory')
+        output_type = 'file'
 
-        success = generator.generate_inventory(output_path, 'test.example.com')
+        success = generator.generate_inventory(output_path, output_type, 'test.example.com')
         results = generator.get_results()
 
         self.assertFalse(success)
@@ -1916,8 +1918,9 @@ class TestInventoryGenerator(unittest.TestCase):
         """Test that generation creates parent directories if they don't exist."""
         generator = InventoryGenerator('containerized', 'growth')
         output_path = os.path.join(self.temp_dir, 'nested', 'folder', 'inventory')
+        output_type = 'file'
 
-        success = generator.generate_inventory(output_path, 'test.example.com')
+        success = generator.generate_inventory(output_path, output_type, 'test.example.com')
         results = generator.get_results()
 
         self.assertTrue(success)
@@ -1930,21 +1933,23 @@ class TestInventoryGenerator(unittest.TestCase):
         generator = InventoryGenerator('containerized', 'growth')
         # Use a path that should cause a write error (read-only directory)
         output_path = '/root/cannot_write_here'
+        output_type = 'file'
 
-        success = generator.generate_inventory(output_path, 'test.example.com')
+        success = generator.generate_inventory(output_path, output_type, 'test.example.com')
         results = generator.get_results()
 
         self.assertFalse(success)
-        self.assertTrue(any('Error writing inventory file' in error for error in results['errors']))
+        self.assertTrue(any('Error writing output' in error for error in results['errors']))
 
     def test_generated_inventory_validates_successfully(self):
         """Test that generated inventory passes validation using existing validator."""
         # Generate inventory
         generator = InventoryGenerator('containerized', 'growth')
         output_path = os.path.join(self.temp_dir, 'generated_inventory')
+        output_type = 'file'
         host = 'server.example.com'
 
-        success = generator.generate_inventory(output_path, host)
+        success = generator.generate_inventory(output_path, output_type, host)
         self.assertTrue(success)
 
         # Now validate the generated inventory
@@ -1963,9 +1968,10 @@ class TestInventoryGenerator(unittest.TestCase):
         """Test the detailed structure of generated inventory content."""
         generator = InventoryGenerator('containerized', 'growth')
         output_path = os.path.join(self.temp_dir, 'generated_inventory')
+        output_type = 'file'
         host = 'myhost.example.org'
 
-        success = generator.generate_inventory(output_path, host)
+        success = generator.generate_inventory(output_path, output_type, host)
         self.assertTrue(success)
 
         # Parse the generated file to verify structure
@@ -2121,9 +2127,10 @@ class TestGenerateIntegration(unittest.TestCase):
         # Generate inventory
         generator = InventoryGenerator('containerized', 'growth')
         output_path = os.path.join(self.temp_dir, 'test_inventory')
+        output_type = 'file'
         host = 'production.example.com'
 
-        success = generator.generate_inventory(output_path, host)
+        success = generator.generate_inventory(output_path, output_type, host)
         self.assertTrue(success)
 
         # Validate the generated inventory
@@ -2142,10 +2149,11 @@ class TestGenerateIntegration(unittest.TestCase):
         """Test generating inventory and comparing with a reference manually created inventory."""
         # Generate inventory
         generator = InventoryGenerator('containerized', 'growth')
+        output_type = 'file'
         generated_path = os.path.join(self.temp_dir, 'generated_inventory')
         host = 'server.example.com'
 
-        success = generator.generate_inventory(generated_path, host)
+        success = generator.generate_inventory(generated_path, output_type, host)
         self.assertTrue(success)
 
         # Create a reference inventory manually (without templates)
@@ -2237,8 +2245,9 @@ eda_pg_password=testpass
             with self.subTest(host=host):
                 generator = InventoryGenerator('containerized', 'growth')
                 output_path = os.path.join(self.temp_dir, f'inventory_{host.replace(":", "_").replace(".", "_")}')
+                output_type = 'file'
 
-                success = generator.generate_inventory(output_path, host)
+                success = generator.generate_inventory(output_path, output_type, host)
                 self.assertTrue(success, f"Failed to generate inventory for host: {host}")
 
                 # Verify the host appears in the file
