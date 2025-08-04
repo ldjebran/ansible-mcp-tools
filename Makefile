@@ -20,17 +20,18 @@ NC := \033[0m # No Color
 help:
 	@echo "Makefile for Ansible MCP Servers"
 	@echo "Available targets:"
-	@echo "  help                 - Show this help message"
-	@echo "  build-all            - Build the Ansible MCP Server images"
-	@echo "  build-gateway        - Build the Ansible MCP Gateway Server image"
-	@echo "  build-controller     - Build the Ansible MCP Controller Server image"
-	@echo "  build-lightspeed     - Build the Ansible MCP Lightspeed Server image"
-	@echo "  build-aap-inventory  - Build the AAP AI Installer Inventory MCP Server image"
-	@echo "  run-gateway          - Run an Ansible MCP Gateway Server container"
-	@echo "  run-controller       - Run an Ansible MCP Controller Server container"
-	@echo "  run-lightspeed       - Run an Ansible MCP Lightspeed Server container"
-	@echo "  run-aap-inventory    - Run an AAP AI Installer Inventory MCP Server image"
-	@echo "  tag-and-push         - Tag and push the container image to quay.io"
+	@echo "  help                            - Show this help message"
+	@echo "  build-all                       - Build the Ansible MCP Server images"
+	@echo "  build-gateway                   - Build the Ansible MCP Gateway Server image"
+	@echo "  build-controller                - Build the Ansible MCP Controller Server image"
+	@echo "  build-lightspeed                - Build the Ansible MCP Lightspeed Server image"
+	@echo "  build-aap-inventory             - Build the AAP Inventory MCP Server image"
+	@echo "  run-gateway                     - Run an Ansible MCP Gateway Server container"
+	@echo "  run-controller                  - Run an Ansible MCP Controller Server container"
+	@echo "  run-lightspeed                  - Run an Ansible MCP Lightspeed Server container"
+	@echo "  run-aap-inventory               - Run an AAP Inventory MCP Server image"
+	@echo "  tag-and-push                    - Tag and push the container image to quay.io"
+	@echo "  tag-and-push-aap-inventory      - Tag and push the AAP Inventory MCP Server image to quay.io"
 	@echo ""
 	@echo "Required Environment variables:"
 	@echo "  ANSIBLE_MCP_VERSION             - Version tag for the image (default: $(ANSIBLE_MCP_VERSION))"
@@ -44,39 +45,39 @@ build-all: build-gateway build-controller build-lightspeed build-aap-inventory
 build-gateway:
 	@echo "Building Ansible Gateway MCP Server image..."
 	${CONTAINER_RUNTIME} build --build-arg PORT=${MCP_GATEWAY_PORT} -f ./aap_gateway_api_2_5/Containerfile -t ansible-mcp-gateway .
-	@echo "Image $(RED)ansible-mcp-gateway$(NC) built successfully."
+	@printf "Image $(RED)ansible-mcp-gateway$(NC) built successfully.\n"
 
 build-controller:
 	@echo "Building Ansible Controller MCP Server image..."
 	${CONTAINER_RUNTIME} build --build-arg PORT=${MCP_CONTROLLER_PORT} -f ./aap_controller_api_2_5/Containerfile -t ansible-mcp-controller .
-	@echo "Image $(RED)ansible-mcp-controller$(NC) built successfully."
+	@printf "Image $(RED)ansible-mcp-controller$(NC) built successfully.\n"
 
 build-lightspeed:
 	@echo "Building Ansible Lightspeed MCP Server image..."
 	${CONTAINER_RUNTIME} build --build-arg PORT=${MCP_LIGHTSPEED_PORT} -f ./aap_lightspeed_api_1_0/Containerfile -t ansible-mcp-lightspeed .
-	@echo "Image $(RED)ansible-mcp-lightspeed$(NC) built successfully."
+	@printf "Image $(RED)ansible-mcp-lightspeed$(NC) built successfully.\n"
 
 build-aap-inventory:
 	@echo "Building AAP AI Installer Inventory MCP Server image..."
 	${CONTAINER_RUNTIME} build -f ./aap_inventory/Containerfile -t aap-inventory-mcp-server .
-	@echo "Image $(RED)aap_inventory$(NC) built successfully."
+	@printf "Image $(RED)aap_inventory$(NC) built successfully.\n"
 
 # Pre-check for required environment variables
 check-env-gateway-url:
 	@if [ -z "$(AAP_GATEWAY_URL)" ]; then \
-		echo "$(RED)Error: AAP_GATEWAY_URL is required but not set$(NC)"; \
+		printf "$(RED)Error: AAP_GATEWAY_URL is required but not set$(NC)\n"; \
 		exit 1; \
 	fi
 
 check-env-controller-service-url:
 	@if [ -z "$(AAP_CONTROLLER_SERVICE_URL)" ]; then \
-		echo "$(RED)Error: AAP_CONTROLLER_SERVICE_URL is required but not set$(NC)"; \
+		printf "$(RED)Error: AAP_CONTROLLER_SERVICE_URL is required but not set$(NC)\n"; \
 		exit 1; \
 	fi
 
 check-env-lightspeed-service-url:
 	@if [ -z "$(AAP_LIGHTSPEED_SERVICE_URL)" ]; then \
-		echo "$(RED)Error: AAP_LIGHTSPEED_SERVICE_URL is required but not set$(NC)"; \
+		printf "$(RED)Error: AAP_LIGHTSPEED_SERVICE_URL is required but not set$(NC)\n"; \
 		exit 1; \
 	fi
 
@@ -138,11 +139,11 @@ clean:
 # Pre-check required environment variables for tag-and-push
 check-env-tag-and-push:
 	@if [ -z "$(QUAY_ORG)" ]; then \
-		echo "$(RED)Error: QUAY_ORG is required but not set$(NC)"; \
+		printf "$(RED)Error: QUAY_ORG is required but not set$(NC)\n"; \
 		exit 1; \
 	fi
 	@if [ -z "$(ANSIBLE_MCP_VERSION)" ]; then \
-		echo "$(RED)Error: ANSIBLE_MCP_VERSION is required but not set$(NC)"; \
+		printf "$(RED)Error: ANSIBLE_MCP_VERSION is required but not set$(NC)\n"; \
 		exit 1; \
 	fi
 
@@ -168,3 +169,14 @@ tag-and-push: check-env-tag-and-push
 	@echo "Pushing image to quay.io..."
 	${CONTAINER_RUNTIME} push quay.io/$(QUAY_ORG)/ansible-mcp-lightspeed:$(ANSIBLE_MCP_VERSION)
 	@echo "Image successfully pushed to quay.io/$(QUAY_ORG)/ansible-mcp-lightspeed:$(ANSIBLE_MCP_VERSION)"
+
+tag-and-push-aap-inventory: check-env-tag-and-push
+	@echo "Logging in to quay.io..."
+	@echo "Please enter your quay.io credentials when prompted"
+	${CONTAINER_RUNTIME} login quay.io
+
+	@echo "Tagging image aap-inventory-mcp-server:$(ANSIBLE_MCP_VERSION)"
+	${CONTAINER_RUNTIME} tag aap-inventory-mcp-server:latest quay.io/$(QUAY_ORG)/aap-inventory-mcp-server:$(ANSIBLE_MCP_VERSION)
+	@echo "Pushing image to quay.io..."
+	${CONTAINER_RUNTIME} push quay.io/$(QUAY_ORG)/aap-inventory-mcp-server:$(ANSIBLE_MCP_VERSION)
+	@echo "Image successfully pushed to quay.io/$(QUAY_ORG)/aap-inventory-mcp-server:$(ANSIBLE_MCP_VERSION)"
