@@ -7,6 +7,7 @@ CONTAINER_RUNTIME ?= docker
 MCP_GATEWAY_PORT ?= 8003
 MCP_CONTROLLER_PORT ?= 8004
 MCP_LIGHTSPEED_PORT ?= 8005
+AAP_INVENTORY_PORT ?= 20000
 
 # Colors for terminal output
 RED := \033[0;31m
@@ -24,9 +25,11 @@ help:
 	@echo "  build-gateway        - Build the Ansible MCP Gateway Server image"
 	@echo "  build-controller     - Build the Ansible MCP Controller Server image"
 	@echo "  build-lightspeed     - Build the Ansible MCP Lightspeed Server image"
+	@echo "  build-aap-inventory  - Build the AAP AI Installer Inventory MCP Server image"
 	@echo "  run-gateway          - Run an Ansible MCP Gateway Server container"
 	@echo "  run-controller       - Run an Ansible MCP Controller Server container"
 	@echo "  run-lightspeed       - Run an Ansible MCP Lightspeed Server container"
+	@echo "  run-aap-inventory    - Run an AAP AI Installer Inventory MCP Server image"
 	@echo "  tag-and-push         - Tag and push the container image to quay.io"
 	@echo ""
 	@echo "Required Environment variables:"
@@ -36,7 +39,7 @@ help:
 	@echo "  AAP_LIGHTSPEED_SERVICE_URL      - URL for an AAP Lightspeed instance"
 	@echo "  QUAY_ORG                        - Quay organization name (default: $(QUAY_ORG))"
 
-build-all: build-gateway build-controller build-lightspeed
+build-all: build-gateway build-controller build-lightspeed build-aap-inventory
 
 build-gateway:
 	@echo "Building Ansible Gateway MCP Server image..."
@@ -52,6 +55,11 @@ build-lightspeed:
 	@echo "Building Ansible Lightspeed MCP Server image..."
 	${CONTAINER_RUNTIME} build --build-arg PORT=${MCP_LIGHTSPEED_PORT} -f ./aap_lightspeed_api_1_0/Containerfile -t ansible-mcp-lightspeed .
 	@echo "Image $(RED)ansible-mcp-lightspeed$(NC) built successfully."
+
+build-aap-inventory:
+	@echo "Building AAP AI Installer Inventory MCP Server image..."
+	${CONTAINER_RUNTIME} build -f ./aap_inventory/Containerfile -t aap-inventory-mcp-server .
+	@echo "Image $(RED)aap_inventory$(NC) built successfully."
 
 # Pre-check for required environment variables
 check-env-gateway-url:
@@ -106,6 +114,15 @@ run-lightspeed: check-env-gateway-url check-env-lightspeed-service-url
 		--env PORT=${MCP_LIGHTSPEED_PORT} \
 		ansible-mcp-lightspeed
 
+run-aap-inventory:
+	@echo "Running AAP AI Installer Inventory MCP Server container..."
+	${CONTAINER_RUNTIME} run \
+		-p ${AAP_INVENTORY_PORT}:${AAP_INVENTORY_PORT} \
+		--env HOST=0.0.0.0 \
+		--env PORT=${AAP_INVENTORY_PORT} \
+		 aap-inventory-mcp-server
+
+
 clean:
 	@echo "Cleaning up..."
 	@echo "Removing ansible-mcp-gateway images..."
@@ -114,6 +131,8 @@ clean:
 	${CONTAINER_RUNTIME} rmi -f $$(${CONTAINER_RUNTIME} images -a -q --filter reference=ansible-mcp-controller) || true
 	@echo "Removing ansible-mcp-lightspeed images..."
 	${CONTAINER_RUNTIME} rmi -f $$(${CONTAINER_RUNTIME} images -a -q --filter reference=ansible-mcp-lightspeed) || true
+	@echo "Removing aap-inventory-mcp-server images..."
+	${CONTAINER_RUNTIME} rmi -f $$(${CONTAINER_RUNTIME} images -a -q --filter reference=aap-inventory-mcp-server) || true
 	@echo "Clean-up complete."
 
 # Pre-check required environment variables for tag-and-push
