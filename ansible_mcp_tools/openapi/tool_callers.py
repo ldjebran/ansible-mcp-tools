@@ -7,6 +7,11 @@ from os import environ
 from typing import Dict, List, override
 
 from ansible_mcp_tools.registry import get_aap_service, AAPService
+from ansible_mcp_tools.openapi.common import (
+    DEFAULT_VERSION_PARAM_NAME,
+    get_spec_default_version,
+    get_spec_path_with_version,
+)
 from ansible_mcp_tools.openapi.protocols.tool_caller import ToolCaller
 from ansible_mcp_tools.openapi.protocols.tool_name_strategy import ToolNameStrategy
 from ansible_mcp_tools.authentication.context import (
@@ -71,6 +76,7 @@ class DefaultToolCaller(BaseToolCaller):
             operation["method"] = operation_details["method"]
             method = operation_details["method"]
             path = operation_details["path"]
+            ignore_version_path_param = operation_details["ignore_version_path_param"]
 
             # llama-stack adds a 'session_id' parameter to all calls
             # This leads to remote API invocations failing due to the additional parameter
@@ -79,6 +85,9 @@ class DefaultToolCaller(BaseToolCaller):
 
             if "session_id" in parameters:
                 del parameters["session_id"]
+
+            if DEFAULT_VERSION_PARAM_NAME in parameters and ignore_version_path_param:
+                del parameters[DEFAULT_VERSION_PARAM_NAME]
 
             try:
                 path = path.format(**parameters)
@@ -192,6 +201,9 @@ class DefaultToolCaller(BaseToolCaller):
     def lookup_operation_details(self, function_name: str) -> Dict or None:
         if not self._spec or "paths" not in self._spec:
             return None
+
+        default_spec_version = get_spec_default_version(self._spec)
+
         for path, path_item in self._spec["paths"].items():
             for method, operation in path_item.items():
                 if method.lower() not in ["get", "post", "put", "delete", "patch"]:
@@ -201,12 +213,18 @@ class DefaultToolCaller(BaseToolCaller):
                 current_function_name = utils.get_tool_name_from_operation_id(
                     operation_id, raw_name, self._tool_name_strategy.normalize_tool_name
                 )
+                path, ignore_version_path_param = get_spec_path_with_version(
+                    path,
+                    default_spec_version,
+                    version_param_name=DEFAULT_VERSION_PARAM_NAME,
+                )
                 if current_function_name == function_name:
                     return {
                         "path": path,
                         "method": method.upper(),
                         "operation": operation,
                         "original_path": path,
+                        "ignore_version_path_param": ignore_version_path_param,
                     }
         return None
 

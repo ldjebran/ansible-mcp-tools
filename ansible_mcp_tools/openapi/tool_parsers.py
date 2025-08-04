@@ -10,6 +10,11 @@ from ansible_mcp_tools.openapi.protocols.tool_name_strategy import ToolNameStrat
 from mcp.server.fastmcp.utilities.logging import get_logger
 
 from ansible_mcp_tools import utils
+from ansible_mcp_tools.openapi.common import (
+    DEFAULT_VERSION_PARAM_NAME,
+    get_spec_default_version,
+    get_spec_path_with_version,
+)
 from ansible_mcp_tools.openapi.protocols.tool_rule import ToolRule
 from ansible_mcp_tools.openapi.tool_rules import check_tool_rules
 
@@ -57,6 +62,7 @@ class DefaultToolParser(BaseToolParser):
             return tools
 
         logger.debug(f"Spec paths available: {list(self._spec['paths'].keys())}")
+        default_spec_version = get_spec_default_version(self._spec)
 
         paths = {path: item for path, item in self._spec["paths"].items()}
         logger.debug(f"Paths: {list(paths.keys())}")
@@ -64,6 +70,13 @@ class DefaultToolParser(BaseToolParser):
             if not path_item:
                 logger.debug(f"Empty path item for {path}")
                 continue
+
+            path, ignore_version_path_param = get_spec_path_with_version(
+                path,
+                default_spec_version,
+                version_param_name=DEFAULT_VERSION_PARAM_NAME,
+            )
+
             for method, operation in path_item.items():
                 if not isinstance(operation, dict) or not check_tool_rules(
                     self._tool_rules, path, method, operation
@@ -144,6 +157,13 @@ class DefaultToolParser(BaseToolParser):
                         )
                         param_in = param.get("in")
                         if param_in in ["path", "query"]:
+                            if (
+                                param_in == "path"
+                                and param_name == DEFAULT_VERSION_PARAM_NAME
+                                and ignore_version_path_param
+                            ):
+                                continue
+
                             param_type = param.get("schema", {}).get("type", "string")
                             schema_type = (
                                 param_type
