@@ -167,6 +167,8 @@ def get_inventory(
                         output = f.read()
                 # Otherise, return the execution log.
                 else:
+                    log.flush()
+                    log.close()
                     with open(log.name) as f:
                         output = f.read()
                         print(output)
