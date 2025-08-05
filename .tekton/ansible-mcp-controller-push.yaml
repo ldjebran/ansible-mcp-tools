@@ -26,6 +26,9 @@ spec:
     value: quay.io/ansible/ansible-mcp-controller:{{revision}}
   - name: dockerfile
     value: aap_controller_api_2_5/Containerfile
+  - name: build-args
+    value:
+    - PORT=8004
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
