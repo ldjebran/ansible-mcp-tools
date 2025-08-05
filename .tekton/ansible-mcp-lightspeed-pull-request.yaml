@@ -29,6 +29,9 @@ spec:
     value: 5d
   - name: dockerfile
     value: aap_lightspeed_api_1_0/Containerfile
+  - name: build-args
+    value:
+    - PORT=8005
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
