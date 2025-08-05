@@ -24,7 +24,7 @@ spec:
   - name: revision
     value: '{{revision}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/ansible-lightspeed-tenant/aap-inventory-mcp-server:on-pr-{{revision}}
+    value: quay.io/ansible/aap-inventory-mcp-server:on-pr-{{pull_request_number}}-{{revision}}
   - name: image-expires-after
     value: 5d
   - name: dockerfile
