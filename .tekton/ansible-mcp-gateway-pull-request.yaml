@@ -29,6 +29,9 @@ spec:
     value: 5d
   - name: dockerfile
     value: aap_gateway_api_2_5/Containerfile
+  - name: build-args
+    value:
+    - PORT=8003
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
