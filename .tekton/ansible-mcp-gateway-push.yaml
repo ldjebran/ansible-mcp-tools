@@ -23,7 +23,7 @@ spec:
   - name: revision
     value: '{{revision}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/ansible-lightspeed-tenant/ansible-mcp-gateway:{{revision}}
+    value: quay.io/ansible/ansible-mcp-gateway:{{revision}}
   - name: dockerfile
     value: aap_gateway_api_2_5/Containerfile
   pipelineSpec:
@@ -533,6 +533,10 @@ spec:
         value: $(tasks.build-image-index.results.IMAGE_URL)
       - name: IMAGE_DIGEST
         value: $(tasks.build-image-index.results.IMAGE_DIGEST)
+      - name: ADDITIONAL_TAGS
+        value:
+        - latest
+        - 0.9.$(tasks.git-metadata.results.commit-timestamp)
       runAfter:
       - build-image-index
       taskRef:
