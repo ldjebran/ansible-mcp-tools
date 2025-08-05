@@ -311,7 +311,6 @@ async def get_cached_templates():
     return job_templates_cache
 
 
-@mcp.tool()
 async def list_job_templates() -> List[Dict[str, Any]]:
     """
     List all available Ansible job templates.
